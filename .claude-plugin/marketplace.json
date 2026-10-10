@@ -1,0 +1,1 @@
+{"$schema":"https://json.schemastore.org/claude-code-marketplace.json","name":"lhg-plugs","owner":{"name":"刘洪光"},"plugins":[{"description":"专利撰写助手：交底书挖掘→权利要求书→说明书→新创性自检，全流程方法论 + 确定性格式审计","name":"lhg-patent","source":"./"}]}
