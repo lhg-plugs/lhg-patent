@@ -1,96 +1,109 @@
 <!-- About 简介（推送后填写到仓库 About 栏）：
-专利撰写助手：交底书→权利要求书→说明书→新创性自检 ｜ 一键安装：/plugin marketplace add lhg-plugs/lhg-patent
+专利撰写助手：交底书挖掘→权利要求书撰写→说明书组织→新创性自检，全流程方法论 + 确定性格式审计。 ｜ 一键安装：/plugin marketplace add lhg-plugs/lhg-patent
 -->
-<!-- topics（推送后打）：claude-code, claude-plugin, agent-skills, patent, intellectual-property, claims -->
+<!-- topics（推送后打）：claude-code, claude-plugin, agent-skills, patent, claims, intellectual-property, novelty, prior-art -->
 
-# lhg-patent：专利撰写助手，交底书到新创性自检一条龙
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="lhg-patent — 专利撰写助手">
+</p>
 
-> ⚠️ **合规声明（首屏置顶）**：本插件产出的是**专利撰写辅助草稿**，**不能直接提交专利申请**，**必须经专利代理人/代理机构复核**后方可使用；现有技术检索结果**不保证查全**，新颖性/创造性的最终判断请专利代理人做出。
->
-> **一句话介绍**：给 AI 编程助手装上"专利撰写助手"——交底书挖掘 → 权利要求书撰写 → 说明书组织 → 新创性自检一条龙；**11 条确定性审计规则专抓引用断裂与标记不一致，合规提醒全程护航**。
->
-> **一键安装**：在 Claude Code 里运行
-> ```
-> /plugin marketplace add lhg-plugs/lhg-patent
-> /plugin install lhg-patent@lhg-plugs
-> ```
+> **一句话介绍**：专利撰写助手：交底书挖掘→权利要求书撰写→说明书组织→新创性自检，全流程方法论 + 确定性格式审计。
+
+**一键安装**：在 Claude Code 里运行
+
+```bash
+/plugin marketplace add lhg-plugs/lhg-patent
+/plugin install lhg-patent@lhg-plugs
+```
+
+## 它能帮你做出什么
+
+每条产出先过确定性脚本自查，再交人工复核清单——数字全部数自仓库里的审计脚本，不靠模型"自觉"。
+
+| 自查脚本 | 规则数 | blocker | warning | nit | 覆盖 |
+|---|---|---|---|---|---|
+| `scripts/audit/patent_audit.py` | 11 | 3 | 7 | 1 | 引用关系、撰写规范、保护范围、附图标记、术语一致、说明书结构、新创性 |
+| **合计** | **11** | **3** | **7** | **1** | |
+
+- **零 LLM 成本**：规则是纯 Python 脚本，零第三方依赖，本地运行。
+- **坏 / 好对照可验**：`fixtures/` 里备有坏/好用例，冒烟测试断言命中情况。
+- **冒烟测试**：`python3 smoke_test.py` 本次实测通过 48/49 项（见仓库自带测试输出）。
 
 ## 它是什么
 
 `lhg-patent` 是一个 Claude Code 插件（plugin 为主、skill 为辅）：
 
-- **3 个命令**（小白入口）：`patent` 专利撰写一条龙（交底书→权利要求书→说明书→新创性自检），`claims` 权利要求书专项（独立/从属撰写与引用检查），`prior-art` 现有技术检索指引（检索式构造+诚实声明）
-- **3 个平台中立 skill**（方法论，可移植到豆包/Workbuddy 等 agent 平台）：`disclosure` 交底书挖掘（技术特征拆解+问题-手段-效果三要素）、`claims-draft` 权利要求撰写规范（上位概括+引用关系+说明书组织）、`novelty-check` 新颖性/创造性/实用性三性自检清单
-- **3 个专家 agent**：交底书挖掘专家、权利要求撰写专家、新创性审查专家
-- **2 个硬门 hook**：commit 前跑专利审计（有 blocker 拦截，可一键关闭）；写专利文档无合规声明时提醒补上
-- **11 条确定性审计规则**（`patent_audit.py`，纯 Python 标准库、零第三方依赖）：权利要求引用断裂/自引用拦截；附图标记不一致拦截；术语前后不一致/保护范围过窄/必要特征缺失/三性清单缺失预警
+- **3 个命令**（小白入口）：`claims` 权利要求书专项、`patent` 专利撰写一条龙、`prior-art` 现有技术检索指引
+- **3 个平台中立 skill**（方法论，可移植到豆包/Workbuddy 等 agent 平台）：claims-draft, disclosure, novelty-check
+- **3 个专家 agent**：claims-drafter, disclosure-miner, novelty-reviewer
+- **2 个 hooks**（`hooks/`：post_write_warn.py, pre_commit_audit.py），关键操作前自动把关
+- **11 条确定性自查规则**：纯 Python 脚本，见上表
 
-## 合规设计
+## 为什么是它
 
-1. **声明置顶**：README 首屏、每个 SKILL.md 开头、每条命令输出末尾，都有显著的合规声明。
-2. **写入提醒**：hook 在专利文档写入后检查合规声明，缺失即提醒（不拦截，exit 0）；`LHG_PATENT_HOOKS_OFF=1` 可关闭。
-3. **审计兜底**：`patent_audit.py` 的 PAT-CLM-001/002（引用断裂）与 PAT-DSC-001（附图标记断裂）是 blocker，`patent` 命令逐条清零。
-4. **措辞红线**：检索结论只许写"本次检索未发现"，不许写"查全了""没有现有技术"；三性只写依据不写结论词。
+不是一个 prompt，而是一套互相兜底的机制：
 
-## 3 个命令用法
+1. **确定性脚本（机器）+ 人工复核清单（人）**：先跑 `scripts/` 下的审计脚本（共 11 条规则），发现分三级：**blocker**（必须修）、**warning**（修或写豁免理由）、**nit**（顺手修）；再按对应 skill 的复核清单过一遍脚本抓不到的（内容真实性、越权、口径一致）。blocker 清零才算做完；为清零改规则算作弊，不许。
+2. **硬门，不是提醒**：hooks 在关键操作前自动拦截或警告（见 `hooks/`），而不是只在文档里写一句"请注意"。
+3. **方法论沉淀在 skill 里**：流程、检查清单、口径都写在 `skills/` 的方法论里，命令只是入口；换个 agent 平台也能复用同一套做法。
+4. **可验，不是可信**：`fixtures/` 备有坏/好对照用例，`smoke_test.py` 一键验证，规则有没有生效、自己跑一遍就知道。
+
+## 快速上手
+
+```bash
+# 1. 安装（Claude Code 里运行）
+/plugin marketplace add lhg-plugs/lhg-patent
+/plugin install lhg-patent@lhg-plugs
+
+# 2. 专利撰写一条龙：交底书挖掘→权利要求书→说明书→新创性自检，全程确定性审计护航。
+/lhg-patent:patent "一种带水温显示的智能水杯"
+```
 
 | 命令 | 作用 | 示例 |
 |---|---|---|
-| `/lhg-patent:patent` | 专利撰写一条龙：交底书→权利要求书→说明书→新创性自检 | `/lhg-patent:patent "一种带水温显示的智能水杯"` |
-| `/lhg-patent:claims` | 权利要求书专项：保护策略→独立/从属撰写→引用检查 | `/lhg-patent:claims ./disclosure.md` |
-| `/lhg-patent:prior-art` | 现有技术检索指引：检索式→检索源→比对表→诚实声明 | `/lhg-patent:prior-art "智能水杯 水温显示"` |
+| `/lhg-patent:claims` | 权利要求书专项：独立/从属权利要求撰写、上位概括、引用关系检查。 | `/lhg-patent:claims ./disclosure.md` |
+| `/lhg-patent:patent` | 专利撰写一条龙：交底书挖掘→权利要求书→说明书→新创性自检，全程确定性审计护航。 | `/lhg-patent:patent "一种带水温显示的智能水杯"` |
+| `/lhg-patent:prior-art` | 现有技术检索指引：检索式构造、检索源清单、查全性诚实声明。 | `/lhg-patent:prior-art "智能水杯 水温显示"` |
+
+## 什么时候用 / 什么时候不用（FAQ）
+
+**什么时候用：**
+
+- 你需要权利要求书专项时 → 用 `/lhg-patent:claims`
+- 你需要专利撰写一条龙时 → 用 `/lhg-patent:patent`
+- 你需要现有技术检索指引时 → 用 `/lhg-patent:prior-art`
+
+**什么时候不用：**
+
+- 你只需要其中一个零散能力时 → 本插件是成套流程，单点需求用更轻量的 skill 更合适
+- 你希望 AI 完全自由发挥、不接受任何自查与硬门时 → 它的规则审计与 hooks 会介入（可关，但那就别装它）
+- 你的场景不在上面命令表覆盖范围内时 → 先看命令表，没有对应命令就别硬套
 
 ## 目录结构
 
 ```
 lhg-patent/
-├── .claude-plugin/          # plugin.json（插件清单）+ marketplace.json（本仓即市场）
-├── commands/                # 3 个命令：patent / claims / prior-art
-├── skills/                  # 3 个平台中立 skill（disclosure / claims-draft / novelty-check，合规声明置顶）
-├── agents/                  # 3 个专家 agent（miner / drafter / reviewer）
-├── hooks/                   # commit 审计硬门 + 合规声明提醒（fail-open，可一键关闭）
-├── scripts/audit/           # patent_audit.py（11 条规则，零第三方依赖）
-├── fixtures/                # 好/坏对照用例（bad/good）
-├── smoke_test.py            # 冒烟测试（52 项，含合规声明检查）
-├── ATTRIBUTION.md           # 灵感来源声明
-└── LICENSE                  # MIT
+├── smoke_test.py          # 一键冒烟测试
+├── ATTRIBUTION.md         # 灵感来源与许可声明
+├── LICENSE                # MIT
+├── README.md              # 本文件
+├── .claude-plugin/
+├── .gitignore
+├── agents/
+├── commands/
+├── fixtures/
+├── hooks/
+├── scripts/
+├── skills/
 ```
-
-## 什么时候用 / 什么时候不用（FAQ）
-
-**Q：它写出来的专利文件能直接提交申请吗？**
-A：**不能**，这是本插件的红线。所有产出都是撰写辅助草稿，必须经专利代理人/代理机构复核后才能用于申请。专利申请涉及严格的法律格式与程序要求，AI 草稿只是帮你把前期工作做扎实。
-
-**Q：它能替代专利代理人吗？**
-A：不能。它做的是代理人**之前**的工作：把你的想法挖清楚（交底书）、把初稿写规矩（权利要求书/说明书）、把明显硬伤先拦下来（审计）。三性判断、答辩策略、程序性事务必须找持证代理人。
-
-**Q：检索功能能保证查全现有技术吗？**
-A：不能。`prior-art` 命令给你的是系统的检索方法（检索式构造、检索源清单、比对表），但任何检索都不保证查全。结论一律写"本次检索未发现"，不写"没有现有技术"。
-
-**Q：我是个人发明人，没接触过专利，能用吗？**
-A：能。`disclosure` skill 就是为你准备的：它会像专利代理人一样访谈你，问出技术特征、三要素、必要特征，输出一份代理人愿意接的交底书。
-
-**Q：一定要用 Claude Code 吗？**
-A：`skills/` 下的方法论是平台中立的纯 Markdown，可直接搬到豆包、Workbuddy 等 agent 平台用。只有 commands/agents/hooks 需要 Claude Code。
-
-**Q：hook 把我的 commit 拦了怎么办？**
-A：两种处理：① 按审计报告修掉 blocker（引用断裂这类硬伤，修了对你有好处）；② 紧急情况 `export LHG_PATENT_HOOKS_OFF=1` 单次豁免。
 
 ## 自检与反馈
 
-本插件自带质检：每次使用后可跑 `python3 smoke_test.py` 一键验证（JSON 合法、skill/command/agent 完整性、合规声明置顶、11 条审计规则、fixtures 埋点命中、hooks 行为）。
+本插件自带质检：每次使用后可跑 `python3 smoke_test.py` 一键验证。
 
-发现 bug 或有改进建议，以 `[QC] <一句话问题>` 为标题提交到 https://github.com/lhg-plugs/lhg-patent/issues，正文写清"复现步骤 → 实际表现 → 期望表现"。**注意：提 issue 时不要公开你的技术细节**（公开可能影响新颖性）。
+发现 bug 或有改进建议，以 `[QC] <一句话问题>` 为标题提交到 https://github.com/lhg-plugs/lhg-patent/issues，正文写清"复现步骤 → 实际表现 → 期望表现"。
 
-## lhg-plugs 插件矩阵
-
-| 插件 | 一句话 | 安装 |
-|---|---|---|
-| [lhg-fullstack](https://github.com/lhg-plugs/lhg-fullstack) | 小白一句话 → 高质量全栈应用 | `/plugin install lhg-fullstack@lhg-plugs` |
-| [lhg-experiment](https://github.com/lhg-plugs/lhg-experiment) | 实验设计专家：假设→设计→功效测算→结果解读一条龙 | `/plugin install lhg-experiment@lhg-plugs` |
-| [lhg-patent](https://github.com/lhg-plugs/lhg-patent) | 专利撰写助手：交底书→权利要求书→说明书→新创性自检 | `/plugin install lhg-patent@lhg-plugs` |
-
-> 完整矩阵见 [lhg-plugs/marketplace](https://github.com/lhg-plugs/marketplace)。
+同门插件见 [lhg-plugs](https://github.com/lhg-plugs)，86 个插件的完整矩阵在 [marketplace](https://github.com/lhg-plugs/marketplace) 维护。
 
 ## 出品：刘洪光
 
