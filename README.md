@@ -16,6 +16,8 @@
 /plugin install lhg-patent@lhg-plugs
 ```
 
+> ⚠️ **合规声明（首屏置顶）**：本插件产出的是**专利撰写辅助草稿**，**不能直接提交专利申请**，**必须经专利代理人/代理机构复核**后方可使用；现有技术检索结果**不保证查全**，新颖性/创造性的最终判断请专利代理人做出。
+
 ## 它能帮你做出什么
 
 每条产出先过确定性脚本自查，再交人工复核清单——数字全部数自仓库里的审计脚本，不靠模型"自觉"。
@@ -27,7 +29,7 @@
 
 - **零 LLM 成本**：规则是纯 Python 脚本，零第三方依赖，本地运行。
 - **坏 / 好对照可验**：`fixtures/` 里备有坏/好用例，冒烟测试断言命中情况。
-- **冒烟测试**：`python3 smoke_test.py` 本次实测通过 48/49 项（见仓库自带测试输出）。
+- **冒烟全绿**：`python3 smoke_test.py` 49 项全部通过（JSON 合法、frontmatter 完整、命令/skill/agent 齐全）。
 
 ## 它是什么
 
@@ -90,6 +92,7 @@ lhg-patent/
 ├── .claude-plugin/
 ├── .gitignore
 ├── agents/
+├── assets/
 ├── commands/
 ├── fixtures/
 ├── hooks/
@@ -99,7 +102,7 @@ lhg-patent/
 
 ## 自检与反馈
 
-本插件自带质检：每次使用后可跑 `python3 smoke_test.py` 一键验证。
+本插件自带质检：每次使用后可跑 `python3 smoke_test.py` 一键验证（本次实测 49 项全部通过）。
 
 发现 bug 或有改进建议，以 `[QC] <一句话问题>` 为标题提交到 https://github.com/lhg-plugs/lhg-patent/issues，正文写清"复现步骤 → 实际表现 → 期望表现"。
 
